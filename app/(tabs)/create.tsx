@@ -5,14 +5,19 @@ import {
   KeyboardAvoidingView,
   ActivityIndicator,
   Platform,
+  ScrollView,
+  Dimensions,
 } from "react-native";
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "@/constants/colors";
+import { Image } from "expo-image";
 
 import * as ImagePicker from "expo-image-picker";
+
+const { width } = Dimensions.get("window");
 
 const Create = () => {
   const router = useRouter();
@@ -49,7 +54,7 @@ const Create = () => {
         </View>
 
         <TouchableOpacity
-          onPress={() => pickImage()}
+          onPress={pickImage}
           className="flex-1 justify-center items-center gap-4"
         >
           <Ionicons name="image-outline" size={48} color={COLORS.grey} />
@@ -63,9 +68,10 @@ const Create = () => {
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       className="flex-1 bg-background"
-      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
     >
       <View className="flex-1">
+        {/* Header */}
         <View className="flex-row flex items-center justify-between px-4 py-3 border-b=[.5px] border-b-surface">
           <TouchableOpacity
             onPress={() => {
@@ -98,6 +104,46 @@ const Create = () => {
             )}
           </TouchableOpacity>
         </View>
+
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{
+            flexGrow: 1,
+          }}
+          bounces={false}
+        >
+          <View className="flex-1">
+            <View
+              style={{
+                width: width,
+                height: width,
+                opacity: isSharing ? 0.7 : 1,
+              }}
+              className="bg-surface justify-center items-center"
+            >
+              <Image
+                source={{ uri: selectedImage }}
+                contentFit="cover"
+                transition={200}
+                className="w-full h-full"
+              />
+              <TouchableOpacity
+                style={{ backgroundColor: "rgba(0,0,0,.75)" }}
+                onPress={pickImage}
+                disabled={isSharing}
+                className="absolute bottom-4 right-4 flex-row p-2 rounded-md items-center"
+              >
+                <Ionicons name="image-outline" size={20} color={COLORS.white} />
+                <Text
+                  style={{ fontWeight: 500 }}
+                  className="text-base text-white"
+                >
+                  Change{" "}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
       </View>
     </KeyboardAvoidingView>
   );
