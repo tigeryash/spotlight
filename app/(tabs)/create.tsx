@@ -7,6 +7,7 @@ import {
   Platform,
   ScrollView,
   Dimensions,
+  TextInput,
 } from "react-native";
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
@@ -15,7 +16,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "@/constants/colors";
 import { Image } from "expo-image";
 
+import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
+
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 const { width } = Dimensions.get("window");
 
@@ -38,7 +43,50 @@ const Create = () => {
     }
   };
 
-  console.log("selectedImage", selectedImage);
+  const generateUploadUrl = useMutation(api.posts.generateUploadUrl);
+  const createPost = useMutation(api.posts.createPost);
+
+  const handleShare = async () => {
+    if (!selectedImage) return;
+
+    try {
+      setIsSharing(true);
+      const uploadUrl = await generateUploadUrl(); //this generates a url to upload the file to
+
+      const fileExtension = selectedImage.split(".").pop()?.toLowerCase();
+      let mimeType = "image/jpeg"; // Default
+
+      if (fileExtension === "png") {
+        mimeType = "image/png";
+      } else if (fileExtension === "webp") {
+        mimeType = "image/webp";
+      } else if (fileExtension === "gif") {
+        mimeType = "image/gif";
+      }
+
+      const uploadResult = await FileSystem.uploadAsync(
+        //upload aync requires a url to upload the file to, and the file to upload, and the options for the upload
+        uploadUrl,
+        selectedImage,
+        {
+          httpMethod: "POST", //post method is used to upload the file
+          uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT, //this means we are uploading a binary file
+          mimeType: mimeType, //mimetype is the type of file we are uploading
+        }
+      );
+
+      if (uploadResult.status !== 200) throw new Error("Upload failed");
+
+      const { storageId } = JSON.parse(uploadResult.body);
+      await createPost({ storageId, caption });
+
+      router.push("/(tabs)");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSharing(false); //set is sharing to false when the upload is done
+    }
+  };
 
   if (!selectedImage) {
     return (
@@ -68,7 +116,7 @@ const Create = () => {
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       className="flex-1 bg-background"
-      keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
     >
       <View className="flex-1">
         {/* Header */}
@@ -93,7 +141,7 @@ const Create = () => {
             className={`px-3 py-2 items-center justify-center`}
             style={{ minWidth: 60, opacity: isSharing ? 0.5 : 1 }}
             disabled={isSharing || !selectedImage}
-            // onPress={handleShare}
+            onPress={handleShare}
           >
             {isSharing ? (
               <ActivityIndicator size={"small"} color={COLORS.primary} />
@@ -111,8 +159,13 @@ const Create = () => {
             flexGrow: 1,
           }}
           bounces={false}
+          contentOffset={{
+            x: 0,
+            y: 100,
+          }}
         >
           <View className="flex-1">
+            {/* image section */}
             <View
               style={{
                 width: width,
@@ -122,7 +175,7 @@ const Create = () => {
               className="bg-surface justify-center items-center"
             >
               <Image
-                source={{ uri: selectedImage }}
+                source={selectedImage}
                 contentFit="cover"
                 transition={200}
                 className="w-full h-full"
@@ -141,6 +194,26 @@ const Create = () => {
                   Change{" "}
                 </Text>
               </TouchableOpacity>
+            </View>
+
+            {/* input section */}
+            <View>
+              <View>
+                <Image
+                  source={user?.imageUrl}
+                  style={{}}
+                  contentFit="cover"
+                  transition={200}
+                />
+                <TextInput
+                  className=""
+                  placeholder="Write a cpation..."
+                  multiline
+                  value={caption}
+                  onChangeText={setCaption}
+                  editable={!isSharing}
+                />
+              </View>
             </View>
           </View>
         </ScrollView>
