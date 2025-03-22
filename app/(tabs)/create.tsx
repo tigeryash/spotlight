@@ -8,19 +8,21 @@ import {
   ScrollView,
   Dimensions,
   TextInput,
+  Image,
 } from "react-native";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useRouter } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "@/constants/colors";
-import { Image } from "expo-image";
+// import { Image } from "expo-image";
 
 import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { styles } from "../styles/create.styles";
 
 const { width } = Dimensions.get("window");
 
@@ -33,11 +35,12 @@ const Create = () => {
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: "images",
+      mediaTypes: ["images"],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
     });
+
     if (!result.canceled) {
       setSelectedImage(result.assets[0].uri);
     }
@@ -53,17 +56,6 @@ const Create = () => {
       setIsSharing(true);
       const uploadUrl = await generateUploadUrl(); //this generates a url to upload the file to
 
-      const fileExtension = selectedImage.split(".").pop()?.toLowerCase();
-      let mimeType = "image/jpeg"; // Default
-
-      if (fileExtension === "png") {
-        mimeType = "image/png";
-      } else if (fileExtension === "webp") {
-        mimeType = "image/webp";
-      } else if (fileExtension === "gif") {
-        mimeType = "image/gif";
-      }
-
       const uploadResult = await FileSystem.uploadAsync(
         //upload aync requires a url to upload the file to, and the file to upload, and the options for the upload
         uploadUrl,
@@ -71,7 +63,13 @@ const Create = () => {
         {
           httpMethod: "POST", //post method is used to upload the file
           uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT, //this means we are uploading a binary file
-          mimeType: mimeType, //mimetype is the type of file we are uploading
+          mimeType: selectedImage.endsWith(".png")
+            ? "image/png"
+            : selectedImage.endsWith(".jpg") || selectedImage.endsWith(".jpeg")
+              ? "image/jpeg"
+              : selectedImage.endsWith(".heic")
+                ? "image/heic"
+                : "image/webp", //mimetype is the type of file we are uploading
         }
       );
 
@@ -175,9 +173,10 @@ const Create = () => {
               className="bg-surface justify-center items-center"
             >
               <Image
-                source={selectedImage}
-                contentFit="cover"
-                transition={200}
+                source={{ uri: selectedImage }}
+                // contentFit="cover"
+                // transition={200}
+                resizeMode="cover"
                 className="w-full h-full"
               />
               <TouchableOpacity
@@ -197,16 +196,17 @@ const Create = () => {
             </View>
 
             {/* input section */}
-            <View>
-              <View>
+            <View style={styles.inputSection}>
+              <View style={styles.captionContainer}>
                 <Image
-                  source={user?.imageUrl}
-                  style={{}}
-                  contentFit="cover"
-                  transition={200}
+                  source={{ uri: user?.imageUrl }}
+                  style={styles.userAvatar}
+                  resizeMode="cover"
+                  // contentFit="cover"
+                  // transition={200}
                 />
                 <TextInput
-                  className=""
+                  style={styles.captionInput}
                   placeholder="Write a cpation..."
                   multiline
                   value={caption}

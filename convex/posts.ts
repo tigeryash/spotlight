@@ -64,7 +64,26 @@ export const getFeedPosts = query({
             q.eq("userId", currentUser._id).eq("postId", post._id)
           )
           .first();
+
+        const bookmark = await ctx.db
+          .query("bookmarks")
+          .withIndex("by_user_and_post", (q) =>
+            q.eq("userId", currentUser._id).eq("postId", post._id)
+          )
+          .first();
+
+        return {
+          ...post,
+          author: {
+            _id: postAuthor?._id,
+            userrname: postAuthor?.username,
+            image: postAuthor?.image,
+          },
+          isLiked: !!like,
+          isBookmarked: !!bookmark,
+        };
       })
     );
+    return postsWithInfo;
   },
 });
