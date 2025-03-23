@@ -78,6 +78,9 @@ const Create = () => {
       const { storageId } = JSON.parse(uploadResult.body);
       await createPost({ storageId, caption });
 
+      setSelectedImage(null); //clear the selected image after uploading
+      setCaption(""); //clear the caption after uploading
+
       router.push("/(tabs)");
     } catch (err) {
       console.error(err);

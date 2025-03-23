@@ -26,7 +26,7 @@ const index = () => {
 
   if (posts.length === 0) return <NoPostsFound />;
   return (
-    <View className="flex-1  p-4 bg-black">
+    <View className="flex-1  bg-black">
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Spotlight</Text>
