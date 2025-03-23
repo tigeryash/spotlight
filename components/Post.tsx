@@ -1,15 +1,54 @@
 import { View, Text, TouchableOpacity } from "react-native";
-import React from "react";
+import React, { useState } from "react";
 import { styles } from "@/app/styles/feed.styles";
 import { Link } from "expo-router";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
+import { Id } from "@/convex/_generated/dataModel";
+import { COLORS } from "@/constants/colors";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import CommentsModal from "./CommentsModal";
 
-const Post = ({ post }: { post: any }) => {
+type PostProps = {
+  post: {
+    _id: Id<"posts">;
+    imageUrl: string;
+    caption?: string;
+    likes: number;
+    comments: number;
+    _creationTime: number;
+    isLiked: boolean;
+    isBookmarked: boolean;
+    author: {
+      _id: string;
+      username: string;
+      image: string;
+    };
+  };
+};
+
+const Post = ({ post }: PostProps) => {
+  const [isLiked, setIsLiked] = useState(post.isLiked);
+  const [likesCount, setLikesCount] = useState(post.likes);
+  const [commentsCount, setCommentsCount] = useState(post.comments);
+  const [showComments, setShowComments] = useState(false);
+
+  const toggleLike = useMutation(api.posts.toggleLike);
+
+  const handleLike = async () => {
+    try {
+      const newIsLiked = await toggleLike({ postId: post._id });
+      setIsLiked(newIsLiked);
+      setLikesCount((prev) => (newIsLiked ? prev + 1 : prev - 1));
+    } catch (error) {
+      console.error("Error liking post:", error);
+    }
+  };
   return (
     <View style={styles.post}>
       {/* post header */}
-      <View>
+      <View style={styles.postHeader}>
         <Link href={"/(tabs)/notifications"}>
           <TouchableOpacity style={styles.postHeaderLeft}>
             <Image
@@ -35,8 +74,8 @@ const Post = ({ post }: { post: any }) => {
 
       {/* image */}
       <Image
-        source={post.author.image}
-        style={styles.postAvatar}
+        source={post.imageUrl}
+        style={styles.postImage}
         contentFit="cover"
         transition={200}
         cachePolicy={"memory-disk"}
@@ -45,8 +84,12 @@ const Post = ({ post }: { post: any }) => {
       {/* post actions */}
       <View style={styles.postActions}>
         <View style={styles.postActionsLeft}>
-          <TouchableOpacity>
-            <Ionicons name="heart-outline" size={24} color="white" />
+          <TouchableOpacity onPress={handleLike}>
+            <Ionicons
+              name={isLiked ? "heart" : "heart-outline"}
+              size={24}
+              color={isLiked ? COLORS.primary : "white"}
+            />
           </TouchableOpacity>
           <TouchableOpacity>
             <Ionicons name="chatbubble-outline" size={22} color="white" />
@@ -60,10 +103,14 @@ const Post = ({ post }: { post: any }) => {
       {/* post info */}
 
       <View style={styles.postInfo}>
-        <Text style={styles.likesText}>Be the first to like</Text>
+        <Text style={styles.likesText}>
+          {likesCount > 0
+            ? `${likesCount.toLocaleString()} likes`
+            : "Be the first to like"}
+        </Text>
         {post.caption && (
           <View style={styles.captionContainer}>
-            <Text style={styles.captionUsername}>{post.author.useername}</Text>
+            <Text style={styles.captionUsername}>{post.author.username}</Text>
             <Text style={styles.captionText}>{post.caption}</Text>
           </View>
         )}
@@ -74,6 +121,13 @@ const Post = ({ post }: { post: any }) => {
 
         <Text style={styles.timeAgo}>2 hours ago</Text>
       </View>
+
+      <CommentsModal
+        postId={post._id}
+        visible={showComments}
+        onClose={() => setShowComments(false)}
+        onCommentAdded={() => setCommentsCount((prev) => prev + 1)}
+      />
     </View>
   );
 };
