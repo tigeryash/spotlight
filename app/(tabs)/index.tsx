@@ -9,6 +9,7 @@ import { COLORS } from "@/constants/colors";
 import Story from "@/components/Story";
 import Post from "@/components/Post";
 import Loader from "@/components/Loader";
+import { STORIES } from "@/constants/mock-data";
 
 const index = () => {
   const { signOut } = useAuth();
