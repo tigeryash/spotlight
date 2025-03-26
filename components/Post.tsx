@@ -89,11 +89,11 @@ const Post = ({ post }: PostProps) => {
 
         {post.author._id === currentUser?._id ? (
           <TouchableOpacity onPress={handleDelete}>
-            <Ionicons name="ellipsis-horizontal" size={24} color="white" />
+            <Ionicons name="trash-outline" size={24} color="white" />
           </TouchableOpacity>
         ) : (
           <TouchableOpacity>
-            <Ionicons name="trash-outline" size={24} color="white" />
+            <Ionicons name="ellipsis-horizontal" size={24} color="white" />
           </TouchableOpacity>
         )}
       </View>
