@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, MutationCtx, query } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthenticatedUser } from "./users";
 
@@ -191,7 +191,7 @@ export const deletePost = mutation({
   },
 });
 
-export const getPostByUser = query({
+export const getPostsByUser = query({
   args: {
     userId: v.optional(v.id("users")),
   },

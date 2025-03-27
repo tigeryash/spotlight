@@ -1,11 +1,13 @@
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import "./globals.css";
-import { StatusBar } from "react-native";
+import { Platform } from "react-native";
 import InitialLayout from "@/components/InitialLayout";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import ClerkAndConvexProvider from "@/providers/ClerkAndConvexProvider";
+import * as NavigationBar from "expo-navigation-bar";
+import { StatusBar } from "expo-status-bar";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -21,17 +23,24 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError]);
 
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      NavigationBar.setBackgroundColorAsync("#000000");
+      NavigationBar.setButtonStyleAsync("light");
+    }
+  }, []);
+
   if (!fontsLoaded && !fontError) {
     return null;
   }
   return (
     <ClerkAndConvexProvider>
       <SafeAreaProvider onLayout={onLayoutRootView}>
-        <StatusBar barStyle="light-content" />
         <SafeAreaView className="flex-1 " style={{ backgroundColor: "black" }}>
           <InitialLayout />
         </SafeAreaView>
       </SafeAreaProvider>
+      <StatusBar style="light" />
     </ClerkAndConvexProvider>
   );
 }
