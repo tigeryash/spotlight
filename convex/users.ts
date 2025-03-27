@@ -148,17 +148,17 @@ const updateFollowCounts = async (
   followingId: Id<"users">,
   isFollow: boolean
 ) => {
-  const follower = await ctx.db.get(followingId);
-  const following = await ctx.db.get(followerId);
+  const follower = await ctx.db.get(followerId);
+  const following = await ctx.db.get(followingId);
 
   if (!follower || !following) throw new Error("User not found");
 
   if (follower && following) {
     await ctx.db.patch(followerId, {
-      followers: follower.followers + (isFollow ? 1 : -1),
+      following: follower.following + (isFollow ? 1 : -1),
     });
     await ctx.db.patch(followingId, {
-      following: following.following + (isFollow ? 1 : -1),
+      followers: following.followers + (isFollow ? 1 : -1),
     });
   }
 };
